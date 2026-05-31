@@ -1,0 +1,12 @@
+{
+  "name": "stealthai",
+  "version": "1.0.0",
+  "description": "Stealth AI Floating Overlay HUD",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^31.0.0"
+  }
+}

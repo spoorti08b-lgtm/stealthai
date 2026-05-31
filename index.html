@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StealthAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Markdown & Syntax Highlighting -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js/styles/github-dark.min.css">
+  <script>
+    // Tell marked to use highlight.js for code blocks (supports v12+ tokens)
+    marked.use({
+      renderer: {
+        code(codeOrToken, lang) {
+          let codeStr = '';
+          let language = '';
+          if (codeOrToken && typeof codeOrToken === 'object') {
+            codeStr = codeOrToken.text || '';
+            language = codeOrToken.lang || '';
+          } else {
+            codeStr = codeOrToken || '';
+            language = lang || '';
+          }
+          
+          const validLang = !!(language && hljs.getLanguage(language));
+          const highlighted = validLang ? 
+            hljs.highlight(codeStr, { language: language }).value : 
+            hljs.highlightAuto(codeStr).value;
+          
+          return `<pre><code class="hljs ${language}">${highlighted}</code></pre>`;
+        }
+      }
+    });
+  </script>
+</head>
+<body class="stealth-mode-active">
+  <!-- System notification Toast -->
+  <div id="toast" class="toast-hidden">
+    <div class="toast-icon">⚡</div>
+    <div id="toast-message">STEALTH ACTIVE</div>
+  </div>
+
+  <div class="app-container" id="stealthai-panel">
+    <!-- Minimal Drag Handle -->
+    <header class="drag-handle" id="drag-handle">
+      <div class="drag-grip">
+        <span></span><span></span><span></span>
+      </div>
+      <!-- Status Indicator & Settings -->
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="status-indicator" id="status-indicator">
+          <span class="status-dot"></span>
+          <span class="status-text">SECURE</span>
+        </div>
+        <button id="btn-settings" title="xAI Settings" style="background: transparent; border: none; color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-app-region: no-drag;">
+          <svg viewBox="0 0 24 24" width="14" height="14">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable Answer Area -->
+    <main class="chat-area" id="answer-area">
+      <div class="message system">
+        <div class="content">Uplink active. Ask anything.</div>
+        <div class="meta">Ctrl+Shift+H: Blend toggle | Ctrl+Shift+Space: Hide/Show</div>
+      </div>
+    </main>
+
+    <!-- Screenshot Preview Panel -->
+    <div id="screenshot-preview" class="screenshot-preview-hidden">
+      <img id="screenshot-thumbnail" src="" alt="Screen Preview">
+      <div class="screenshot-info">
+        <span class="screenshot-label">SCREEN ACTIVE</span>
+        <button id="btn-clear-screenshot" title="Discard Screenshot">✕</button>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <footer class="input-area">
+      <button id="btn-capture" title="Capture Screen" style="background: transparent; border: none; color: #ffffff; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; transition: transform 0.1s/ease; margin-right: 10px; -webkit-app-region: no-drag;">
+        <svg viewBox="0 0 24 24" width="14" height="14">
+          <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" fill="currentColor"/>
+        </svg>
+      </button>
+      <textarea id="chat-input" placeholder="Ask anything..." autocomplete="off" rows="1"></textarea>
+      <button id="btn-send" title="Send Directive">
+        <svg viewBox="0 0 24 24" width="14" height="14">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/>
+        </svg>
+      </button>
+    </footer>    <!-- Custom Resize Handle -->
+    <div class="resize-handle" id="resize-handle" title="Resize HUD"></div>
+
+    <!-- Opacity Popover Overlay -->
+    <div id="opacity-popup" class="opacity-popup-hidden">
+      <div style="display: flex; justify-content: space-between; font-family: 'Share Tech Mono', monospace; font-size: 10px; margin-bottom: 6px; letter-spacing: 0.5px;">
+        <span>HUD OPACITY</span>
+        <span id="opacity-val">1.00</span>
+      </div>
+      <input type="range" id="opacity-slider" min="0.10" max="1.00" step="0.05" value="1.00" style="width: 100%; -webkit-app-region: no-drag;">
+    </div>
+
+    <!-- Settings Panel Modal -->
+    <div id="settings-modal" class="settings-modal-hidden">
+      <div class="settings-content">
+        <div class="settings-header">
+          <span>HUD SYSTEM SETTINGS</span>
+          <button id="btn-settings-close" title="Close Settings">✕</button>
+        </div>
+        <div class="settings-body">
+          <!-- Groq API Key -->
+          <div class="input-group">
+            <label for="groq-api-key">Groq API Key</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="password" id="groq-api-key" placeholder="gsk-..." style="flex-grow: 1;">
+              <button id="btn-test-connection" style="background: transparent; border: 1px solid #ffffff; color: #ffffff; padding: 0 10px; font-family: 'Share Tech Mono', monospace; font-size: 11px; cursor: pointer; -webkit-app-region: no-drag;">TEST</button>
+            </div>
+            <div id="test-result" style="font-size: 9px; font-family: 'Share Tech Mono', monospace; margin-top: 4px; color: #ffffff; opacity: 0.8;"></div>
+          </div>
+
+          <!-- Tavily API Key -->
+          <div class="input-group">
+            <label for="tavily-api-key">Tavily API Key</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="password" id="tavily-api-key" placeholder="tvly-..." style="flex-grow: 1;">
+              <button id="btn-test-tavily" style="background: transparent; border: 1px solid #ffffff; color: #ffffff; padding: 0 10px; font-family: 'Share Tech Mono', monospace; font-size: 11px; cursor: pointer; -webkit-app-region: no-drag;">TEST</button>
+            </div>
+            <div id="tavily-test-result" style="font-size: 9px; font-family: 'Share Tech Mono', monospace; margin-top: 4px; color: #ffffff; opacity: 0.8;"></div>
+          </div>
+
+          <!-- Default Model Dropdown -->
+          <div class="input-group">
+            <label for="groq-model-select">Default Model</label>
+            <select id="groq-model-select">
+              <option value="auto">Auto (recommended)</option>
+              <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+              <option value="llama-3.1-8b-instant">llama-3.1-8b-instant</option>
+              <option value="gemma2-9b-it">gemma2-9b-it</option>
+            </select>
+          </div>
+
+          <!-- Opacity Slider -->
+          <div class="input-group">
+            <label for="settings-opacity" style="display: flex; justify-content: space-between;">
+              <span>HUD Opacity</span>
+              <span id="settings-opacity-val">100%</span>
+            </label>
+            <input type="range" id="settings-opacity" min="0.20" max="1.00" step="0.05" value="1.00" style="width: 100%;">
+          </div>
+
+          <!-- Font Size Dropdown -->
+          <div class="input-group">
+            <label for="font-size-select">Font Size</label>
+            <select id="font-size-select">
+              <option value="12px">12px</option>
+              <option value="14px" selected>14px</option>
+              <option value="16px">16px</option>
+            </select>
+          </div>
+
+          <!-- Toggles (Web Search, Show Response Time, Show Model Name) -->
+          <div class="input-group" style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+            <label class="checkbox-container">
+              <input type="checkbox" id="web-search-toggle" checked>
+              <span>Enable Web Search (Tavily)</span>
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" id="show-time-toggle" checked>
+              <span>Show Response Time (secs)</span>
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" id="show-model-toggle" checked>
+              <span>Show Model Name Tag</span>
+            </label>
+          </div>
+
+          <button id="btn-settings-save">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

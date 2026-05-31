@@ -1,0 +1,806 @@
+/* StealthAI - Clean Futuristic HUD Wireframe Theme */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  background-color: transparent;
+  color: #ffffff;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  user-select: none;
+}
+
+/* App Container (Floating HUD Panel) */
+.app-container {
+  position: fixed;
+  width: 420px;
+  min-width: 320px;
+  max-width: 95vw;
+  height: 480px;      /* default height */
+  min-height: 200px;
+  max-height: 95vh;
+  top: 40px;
+  left: 40px;
+  right: unset;
+  bottom: unset;
+  box-sizing: border-box;
+  overflow: hidden;
+  background-color: #000000;
+  border: 1px solid #ffffff;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s ease;
+}
+
+/* Apply mix-blend-mode: difference for optical blending in stealth mode */
+body.stealth-mode-active .app-container {
+  mix-blend-mode: difference !important;
+}
+
+/* Drag Handle Header */
+.drag-handle {
+  height: 36px;
+  border-bottom: 1px solid #ffffff;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  background-color: #000000;
+  flex-shrink: 0;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-grip {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.drag-grip span {
+  width: 4px;
+  height: 4px;
+  background-color: #ffffff;
+  border: 1px solid #ffffff;
+  border-radius: 50%;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+/* Pulsing effect for thinking state */
+.status-indicator.thinking .status-dot {
+  animation: status-pulse 0.6s infinite alternate;
+}
+
+.status-indicator.thinking .status-text {
+  animation: text-pulse 0.6s infinite alternate;
+}
+
+#btn-settings {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+  padding: 4px;
+}
+
+#btn-settings:hover {
+  transform: rotate(45deg);
+}
+
+/* Scrollable Chat Area */
+.chat-area {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: #000000;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  animation: fade-in 0.15s ease-out;
+}
+
+.message.user {
+  align-self: flex-end;
+  max-width: 85%;
+  text-align: right;
+}
+
+.message.assistant {
+  align-self: flex-start;
+  max-width: 85%;
+}
+
+.message.system {
+  align-self: center;
+  text-align: center;
+  width: 100%;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  padding: 10px;
+  margin: 6px 0;
+  background-color: #000000;
+}
+
+.message .content {
+  line-height: 1.5;
+  word-break: break-word;
+  font-size: 13px;
+}
+
+.message.user .content {
+  border: 1px solid #ffffff;
+  padding: 8px 12px;
+  display: inline-block;
+  text-align: left;
+}
+
+.message.assistant .content {
+  border-left: 2px solid #ffffff;
+  padding-left: 12px;
+}
+
+.message.system .content {
+  font-size: 11px;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.message .meta {
+  font-size: 10px;
+  opacity: 0.6;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* Input Area */
+.input-area {
+  border-top: 1px solid #ffffff;
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background-color: #000000;
+  flex-shrink: 0;
+}
+
+.input-area textarea {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  outline: none;
+  padding: 6px 0;
+  resize: none;
+  height: 20px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.input-area textarea::-webkit-scrollbar {
+  width: 3px;
+}
+
+.input-area textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.input-area textarea::-webkit-scrollbar-thumb {
+  background-color: #ffffff;
+}
+
+.input-area button {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: transform 0.1s ease;
+}
+
+.input-area button:hover {
+  transform: scale(1.15);
+}
+
+.input-area button:active {
+  transform: scale(0.9);
+}
+
+/* Custom Resize Handle in Bottom-Right Corner */
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  background: linear-gradient(135deg, transparent 60%, #ffffff 60%);
+  z-index: 10000;
+  opacity: 0.6;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.resize-handle:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* System Notifications */
+#toast {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #000000;
+  border: 1px solid #ffffff;
+  padding: 8px 16px;
+  font-size: 11px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 1px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.toast-hidden {
+  opacity: 0;
+  transform: translate(-50%, -10px) !important;
+}
+
+.toast-icon {
+  animation: status-pulse 0.5s infinite alternate;
+}
+
+/* Scrollbars */
+.chat-area::-webkit-scrollbar,
+#settings-modal::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chat-area::-webkit-scrollbar-track,
+#settings-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-area::-webkit-scrollbar-thumb,
+#settings-modal::-webkit-scrollbar-thumb {
+  background-color: #ffffff;
+}
+
+/* Animations */
+@keyframes status-pulse {
+  from { opacity: 0.3; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes text-pulse {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   SETTINGS MODAL (CLEAN HUD STYLING)
+   ========================================================================== */
+
+/* Hide chat elements when settings is open to prevent text overlap */
+.app-container.settings-active .chat-area,
+.app-container.settings-active .input-area,
+.app-container.settings-active .resize-handle {
+  display: none !important;
+}
+
+#settings-modal {
+  position: absolute;
+  top: 36px; /* directly below header */
+  left: 0;
+  width: 100%;
+  height: calc(100% - 36px);
+  background-color: #000000;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Use display none to absolutely hide the modal when inactive */
+.settings-modal-hidden {
+  display: none !important;
+}
+
+.settings-content {
+  width: 100%;
+  height: 100%;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid #ffffff;
+  padding-bottom: 8px;
+}
+
+#btn-settings-close {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  transition: transform 0.1s ease;
+}
+
+#btn-settings-close:hover {
+  transform: scale(1.15);
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input-group label {
+  font-size: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 1px;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.input-group input[type="password"] {
+  background: #000000;
+  border: 1px solid #ffffff;
+  color: #ffffff;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-style 0.1s ease;
+}
+
+.input-group input[type="password"]:focus {
+  border-style: dashed;
+}
+
+/* Dropdown Selector styling */
+.settings-body select {
+  background-color: #000000;
+  border: 1px solid #ffffff;
+  color: #ffffff;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  padding: 8px 10px;
+  outline: none;
+  width: 100%;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+/* Radio buttons styled cleanly */
+.radio-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio-options label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.radio-options input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #ffffff;
+  border-radius: 50%;
+  outline: none;
+  background-color: transparent;
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+}
+
+.radio-options input[type="radio"]:checked::before {
+  content: "";
+  display: block;
+  width: 6px;
+  height: 6px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+/* Temperature Slider styling */
+.settings-body input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.settings-body input[type="range"]::-webkit-slider-runnable-track {
+  background: #ffffff;
+  height: 1px;
+}
+
+.settings-body input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -6px;
+  background-color: #ffffff;
+  border: 2px solid #000000;
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  transition: transform 0.1s ease;
+}
+
+.settings-body input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Action Buttons styling */
+#btn-settings-save {
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #ffffff;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  margin-top: 6px;
+}
+
+#btn-settings-save:hover {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+/* Settings Difference blending */
+body.stealth-mode-active #settings-modal,
+body.stealth-mode-active .settings-content {
+  mix-blend-mode: difference !important;
+}
+
+/* Compact HUD Mode */
+.app-container.compact-mode {
+  height: 120px !important;
+  min-height: 120px !important;
+}
+
+.app-container.compact-mode .drag-handle {
+  display: none !important;
+}
+
+.app-container.compact-mode .chat-area {
+  padding: 8px 12px !important;
+}
+
+/* In compact mode, show only the last message (assistant or system) */
+.app-container.compact-mode .chat-area .message:not(:last-child) {
+  display: none !important;
+}
+
+/* Opacity Slider Popover */
+#opacity-popup {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #000000;
+  border: 1px solid #ffffff;
+  padding: 10px 14px;
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 180px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+}
+
+.opacity-popup-hidden {
+  display: none !important;
+}
+
+/* Apply difference blending to opacity popup in stealth mode */
+body.stealth-mode-active #opacity-popup {
+  mix-blend-mode: difference !important;
+}
+
+/* Custom Styled Checkboxes for Settings */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: 'Share Tech Mono', monospace;
+  user-select: none;
+  margin-bottom: 2px;
+}
+
+.checkbox-container input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #ffffff;
+  background-color: transparent;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+}
+
+.checkbox-container input[type="checkbox"]:checked::before {
+  content: "✕";
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: bold;
+  position: absolute;
+  top: -1px;
+  left: 2px;
+}
+
+/* Markdown & Code Syntax Highlighting Styles */
+.message .content p {
+  margin-bottom: 8px;
+}
+.message .content p:last-child {
+  margin-bottom: 0;
+}
+
+.message .content pre {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 10px 0;
+  border-radius: 0px; /* HUD sharp corners */
+}
+
+/* Override default hljs background to maintain pure stealth contrast */
+.message .content pre code {
+  background: transparent !important;
+  font-family: 'Space Mono', monospace !important;
+  font-size: 12px !important;
+  padding: 0 !important;
+  display: block;
+}
+
+/* Inline code markup */
+.message .content code {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 2px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Lists */
+.message .content ul,
+.message .content ol {
+  padding-left: 22px;
+  margin: 8px 0;
+}
+
+.message .content li {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+/* Headings */
+.message .content h1,
+.message .content h2,
+.message .content h3,
+.message .content h4 {
+  margin: 12px 0 6px;
+  font-weight: bold;
+  font-family: 'Space Mono', monospace;
+}
+
+.message .content h1 { font-size: 17px; }
+.message .content h2 { font-size: 15px; }
+.message .content h3 { font-size: 14px; }
+.message .content h4 { font-size: 13px; }
+
+/* Bold formatting */
+.message .content strong {
+  font-weight: bold;
+  color: #ffffff;
+}
+
+/* User-requested Answer Block Styling */
+.answer-block {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+/* Code blocks */
+.answer-block pre {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.answer-block code {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+/* Inline code */
+.answer-block p code {
+  background: rgba(255,255,255,0.15);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* Lists */
+.answer-block ul,
+.answer-block ol {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+
+.answer-block li {
+  margin: 4px 0;
+}
+
+/* Headings */
+.answer-block h1,
+.answer-block h2,
+.answer-block h3 {
+  margin: 10px 0 6px;
+  font-weight: bold;
+}
+
+.answer-block h3 { font-size: 15px; }
+.answer-block h2 { font-size: 16px; }
+
+/* Bold */
+.answer-block strong {
+  font-weight: bold;
+  color: white;
+}
+
+/* Screen Capture Preview Panel */
+#screenshot-preview {
+  background-color: #000000;
+  border-top: 1px solid #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  flex-shrink: 0;
+}
+
+.screenshot-preview-hidden {
+  display: none !important;
+}
+
+#screenshot-thumbnail {
+  height: 32px;
+  width: auto;
+  max-width: 60px;
+  border: 1px solid #ffffff;
+  object-fit: cover;
+}
+
+.screenshot-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+.screenshot-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #ffffff;
+  letter-spacing: 1.5px;
+}
+
+#btn-clear-screenshot {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Space Mono', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: transform 0.1s ease;
+}
+
+#btn-clear-screenshot:hover {
+  transform: scale(1.2);
+}
+
+#btn-capture:hover {
+  transform: scale(1.15);
+}
+
+.app-container.settings-active #screenshot-preview {
+  display: none !important;
+}
