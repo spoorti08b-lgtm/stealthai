@@ -804,3 +804,48 @@ body.stealth-mode-active #opacity-popup {
 .app-container.settings-active #screenshot-preview {
   display: none !important;
 }
+
+/* --- Live Listen HUD Styling --- */
+#btn-listen.listening-active {
+  color: #ff3366 !important;
+  animation: listen-pulse 1s infinite alternate;
+}
+
+@keyframes listen-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+}
+
+.status-indicator.listening .status-dot {
+  background-color: #00ffaa !important;
+  box-shadow: 0 0 6px #00ffaa;
+}
+.status-indicator.listening .status-text {
+  color: #00ffaa !important;
+}
+
+.status-indicator.speaking .status-dot {
+  background-color: #ff3366 !important;
+  box-shadow: 0 0 8px #ff3366;
+  animation: status-pulse 0.4s infinite alternate;
+}
+.status-indicator.speaking .status-text {
+  color: #ff3366 !important;
+  animation: text-pulse 0.4s infinite alternate;
+}
+
+.status-indicator.transcribing .status-dot {
+  background-color: #33ccff !important;
+  box-shadow: 0 0 8px #33ccff;
+  animation: status-pulse 0.5s infinite alternate;
+}
+.status-indicator.transcribing .status-text {
+  color: #33ccff !important;
+  animation: text-pulse 0.5s infinite alternate;
+}

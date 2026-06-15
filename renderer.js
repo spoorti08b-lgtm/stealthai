@@ -127,13 +127,34 @@ document.addEventListener('mouseup', (e) => {
 
 
 // --- Status Indicator Helper ---
-function setThinking(isThinking) {
-  if (isThinking) {
+function setStatus(state) {
+  statusIndicator.classList.remove('thinking', 'listening', 'speaking', 'transcribing');
+  if (state === 'thinking') {
     statusIndicator.classList.add('thinking');
     statusText.textContent = "THINKING";
+  } else if (state === 'listening') {
+    statusIndicator.classList.add('listening');
+    statusText.textContent = "LISTENING";
+  } else if (state === 'speaking') {
+    statusIndicator.classList.add('speaking');
+    statusText.textContent = "SPEAKING";
+  } else if (state === 'transcribing') {
+    statusIndicator.classList.add('transcribing');
+    statusText.textContent = "TRANSCRIBING";
   } else {
-    statusIndicator.classList.remove('thinking');
     statusText.textContent = "SECURE";
+  }
+}
+
+function setThinking(isThinking) {
+  if (isThinking) {
+    setStatus('thinking');
+  } else {
+    if (typeof isListening !== 'undefined' && isListening) {
+      setStatus('listening');
+    } else {
+      setStatus('secure');
+    }
   }
 }
 
@@ -974,6 +995,209 @@ btnClearScreenshot.addEventListener('click', () => {
 
 ipcRenderer.on('trigger-screen-capture', () => {
   triggerScreenCapture();
+});
+
+// --- Live Listen Mode (Speech-to-Text with VAD) ---
+const btnListen = document.getElementById('btn-listen');
+let isListening = false;
+let audioStream = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let audioContext = null;
+let analyser = null;
+let vadInterval = null;
+let lastSpeechTime = 0;
+let speakingDetected = false;
+
+// Silence parameters
+const VAD_SILENCE_THRESHOLD = 0.012; // RMS amplitude threshold
+const VAD_SILENCE_DURATION = 1500;   // ms of silence before auto-submitting
+
+async function startListenMode() {
+  if (isListening) return;
+  
+  const apiKey = localStorage.getItem('groq-api-key');
+  if (!apiKey) {
+    appendSystemMessage("Listen mode failed: No Groq API key found. Open settings to configure.");
+    return;
+  }
+  
+  try {
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    isListening = true;
+    btnListen.classList.add('listening-active');
+    setStatus('listening');
+    
+    // Set up Web Audio API analyzer
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(audioStream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+    
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(audioStream, { mimeType: 'audio/webm' });
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        audioChunks.push(e.data);
+      }
+    };
+    
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      audioChunks = [];
+      
+      if (speakingDetected) {
+        await transcribeAndProcessAudio(audioBlob);
+      }
+    };
+    
+    mediaRecorder.start();
+    speakingDetected = false;
+    lastSpeechTime = 0;
+    
+    // VAD Loop (Checks volume every 100ms)
+    vadInterval = setInterval(() => {
+      if (!isListening) return;
+      
+      analyser.getByteTimeDomainData(dataArray);
+      
+      // Calculate RMS volume
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const val = (dataArray[i] - 128) / 128;
+        sum += val * val;
+      }
+      const rms = Math.sqrt(sum / bufferLength);
+      
+      if (rms > VAD_SILENCE_THRESHOLD) {
+        if (!speakingDetected) {
+          speakingDetected = true;
+          setStatus('speaking');
+        }
+        lastSpeechTime = Date.now();
+      } else {
+        if (speakingDetected && lastSpeechTime > 0) {
+          const silenceDuration = Date.now() - lastSpeechTime;
+          if (silenceDuration > VAD_SILENCE_DURATION) {
+            // Silence limit reached! Trigger transcription and restart recording
+            setStatus('transcribing');
+            mediaRecorder.stop();
+            
+            // Re-initialize for next speech slice immediately
+            speakingDetected = false;
+            lastSpeechTime = 0;
+            mediaRecorder.start();
+          }
+        } else {
+          // If thinking/transcribing, keep that status. Otherwise show listening.
+          if (statusText.textContent !== "THINKING" && statusText.textContent !== "TRANSCRIBING") {
+            setStatus('listening');
+          }
+        }
+      }
+    }, 100);
+    
+    appendSystemMessage("Live Listen Mode active. Speak now, I will transcribe and respond automatically.");
+    showToast("LIVE LISTEN ACTIVE");
+  } catch (err) {
+    console.error("Failed to start Listen Mode:", err);
+    appendSystemMessage(`Listen Mode error: ${err.message}`);
+    showToast("LISTEN FAILED");
+    stopListenMode();
+  }
+}
+
+function stopListenMode() {
+  if (!isListening) return;
+  isListening = false;
+  btnListen.classList.remove('listening-active');
+  setStatus('secure');
+  
+  if (vadInterval) {
+    clearInterval(vadInterval);
+    vadInterval = null;
+  }
+  
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  
+  if (audioStream) {
+    audioStream.getTracks().forEach(track => track.stop());
+    audioStream = null;
+  }
+  
+  if (audioContext) {
+    audioContext.close();
+    audioContext = null;
+  }
+  
+  appendSystemMessage("Live Listen Mode deactivated.");
+  showToast("LIVE LISTEN OFF");
+}
+
+function toggleListenMode() {
+  if (isListening) {
+    stopListenMode();
+  } else {
+    startListenMode();
+  }
+}
+
+async function transcribeAndProcessAudio(audioBlob) {
+  const apiKey = localStorage.getItem('groq-api-key');
+  if (!apiKey) {
+    appendSystemMessage("Transcription failed: No Groq API key found.");
+    return;
+  }
+  
+  setStatus('transcribing');
+  
+  try {
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'speech.webm');
+    formData.append('model', 'whisper-large-v3');
+    
+    const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Groq Whisper failed: ${response.status} - ${errText}`);
+    }
+    
+    const data = await response.json();
+    const transcribedText = data.text ? data.text.trim() : '';
+    
+    if (transcribedText && transcribedText.length > 1) {
+      appendSystemMessage(`Transcribed speech: "${transcribedText}"`);
+      chatInput.value = transcribedText;
+      await handleSendMessage();
+    } else {
+      console.log("Empty transcription (silence/noise).");
+      if (isListening) setStatus('listening');
+    }
+  } catch (err) {
+    console.error("Transcription error:", err);
+    appendSystemMessage(`Speech-to-text error: ${err.message}`);
+    if (isListening) setStatus('listening');
+  }
+}
+
+// Event Bindings
+btnListen.addEventListener('click', toggleListenMode);
+
+ipcRenderer.on('toggle-listen-mode', () => {
+  toggleListenMode();
 });
 
 

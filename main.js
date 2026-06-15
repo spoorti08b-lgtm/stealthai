@@ -152,6 +152,17 @@ function registerShortcuts() {
   if (!captureRegistered) {
     console.log('Screen capture shortcut registration failed');
   }
+
+  // Ctrl+Shift+L to toggle listen mode
+  const listenRegistered = globalShortcut.register('CommandOrControl+Shift+L', () => {
+    if (mainWindow) {
+      mainWindow.webContents.send('toggle-listen-mode');
+    }
+  });
+
+  if (!listenRegistered) {
+    console.log('Listen shortcut registration failed');
+  }
 }
 
 
